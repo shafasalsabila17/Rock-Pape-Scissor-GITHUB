@@ -34,30 +34,36 @@ public class BattleManager : MonoBehaviour
         switch (state)
         {
             case State.Preparation:
-                // player1 prepres
-                // set player1 play first
+                player1.Prepare();
+                player2.Prepare();
+
+                player1.SetPlay (true);
+                player2.SetPlay (false);
                 state = State.Player1Select;
                 break;
 
             case State.Player1Select:
-                if (isPlayer1DoneSelecting)
+                if (player1.SelectedCharacter != null)
                 {
-                //set player 2 play next
-                state = State.Player2Select;
+                    player1.SetPlay (false);
+                    player2.SetPlay (true);
+                    state = State.Player2Select;
                 }
+
                 break; 
 
             case State.Player2Select:
-                if (isPlayer2DoneSelecting)
+                if (player2.SelectedCharacter != null) 
                 {
-                //set player 1 and 2 attacks
+                    player1.Attack();
+                    player2.Attack();
                 state = State.Attacking;
                 }
 
                 break;
 
             case State.Attacking:
-                if(isAttackDone)
+                if(player1.IsAttacking() == false && player2.IsAttacking() == false)
                 {
                     // calculate who take damage
                     // start damage animation
