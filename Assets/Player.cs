@@ -9,10 +9,10 @@ using UnityEngine.Events;
 public class Player : MonoBehaviour
 {
     [SerializeField] Character selectedCharacter;
-    [SerializeField] List<Character> characterList;
     [SerializeField] Transform atkRef;
-    [SerializeField] UnityEvent onTakeDamage;
     [SerializeField] bool isBot;
+    [SerializeField] List<Character> characterList;
+    [SerializeField] UnityEvent onTakeDamage;
 
     public Character SelectedCharacter { get => selectedCharacter; }
     public List<Character> CharacterList { get => characterList; }
