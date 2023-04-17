@@ -1,22 +1,17 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class BattleManager : MonoBehaviour
 {
     [SerializeField] State state;
+    [SerializeField] GameObject battleResult;
+    [SerializeField] TMP_Text battleResultText;
     [SerializeField] Player player1;
     [SerializeField] Player player2;
-
-
-
-    // Temporary
-    [SerializeField] bool isPlayer1DoneSelecting;
-    [SerializeField] bool isPlayer2DoneSelecting;
-    [SerializeField] bool isAttackDone;
-    [SerializeField] bool isDamagingDone;
-    [SerializeField] bool isReturningDone;
-    [SerializeField] bool isPlayerEleminated;
 
     enum State
     {
@@ -26,7 +21,7 @@ public class BattleManager : MonoBehaviour
         Attacking,
         Damaging,
         Returning,
-        BattleOver
+        BattleIsOver
     }
     void Update()
     {
@@ -55,6 +50,7 @@ public class BattleManager : MonoBehaviour
             case State.Player2Select:
                 if (player2.SelectedCharacter != null) 
                 {
+                    player2.SetPlay (false);
                     player1.Attack();
                     player2.Attack();
                 state = State.Attacking;
@@ -65,30 +61,132 @@ public class BattleManager : MonoBehaviour
             case State.Attacking:
                 if(player1.IsAttacking() == false && player2.IsAttacking() == false)
                 {
-                    // calculate who take damage
-                    // start damage animation
+                    CalculateBattle (player1, player2, out Player winner, out Player loser);
+                    if  (loser == null)
+                    {
+                        player1.Takedamage(player2.SelectedCharacter.AttackPower);
+                        player2.Takedamage(player1.SelectedCharacter.AttackPower);
+                    }
+                    else
+                    {
+                        loser.Takedamage(winner.SelectedCharacter.AttackPower);
+                    }
+
                     state = State.Damaging;
                 }
+                
                 break;
+
             case State.Damaging:
-                if (isDamagingDone)
+                if (player1.IsDamaging() == false && player2.IsDamaging() == false )
                 {
+                    if (player1.SelectedCharacter.CurrentHP == 0)
+                     {
+                        player1.Remove(player1.SelectedCharacter);
+                    }
+
+                    if (player2.SelectedCharacter.CurrentHP == 0)
+                    {
+                        player2.Remove(player2.SelectedCharacter);
+                    }
+                    
+                        // animation return
+                    if (player1.SelectedCharacter != null)
+                        {
+                            player1.Return();
+                        }
+                    if (player2.SelectedCharacter != null)
+                        {
+                            player2.Return();   
+                        }
                     state = State.Returning;
                 }
                 break;
 
             case State.Returning:
-                if (isReturningDone)
+                if (player1.IsReturning() == false && player2.IsReturning() == false)
                 {
-                    if (isPlayerEleminated)
-                        state = State.BattleOver;
+                    if (player1.CharacterList.Count == 0 && player2.CharacterList.Count == 0 )
+                    {
+                        battleResult.SetActive(true);
+                        battleResultText. text = "Battle Is Over!\nDrawn!";
+                        state = State.BattleIsOver;
+                    }
+                    else if(player1.CharacterList.Count == 0)
+                    {
+                        battleResult.SetActive(true);
+                        battleResultText. text = "Battle Is Over!\nPlayer 2 Win!";
+                        state = State.BattleIsOver;
+                    }
+                    else if(player2.CharacterList.Count == 0)
+                    {
+                        battleResult.SetActive(true);
+                        battleResultText. text = "Battle Is Over!\nPlayer 1 Win!";
+                        state = State.BattleIsOver;
+                    }
                     else
+                    {
                         state = State.Preparation;
+                    }
+                
                 }
                 break;
-            case State.BattleOver:
-                break;
+            case State.BattleIsOver:
 
+
+                break;
+        }
     }
-}
+
+    private void CalculateBattle (Player player1, Player player2, out Player winner, out Player loser)
+    {
+        var type1 = player1.SelectedCharacter.Type;
+        var type2 = player2.SelectedCharacter.Type;
+
+        if (type1 == CharacterType.Rock && type2 == CharacterType.Paper)
+        {
+            winner = player2;
+            loser = player1;
+        }
+        else if (type1 == CharacterType.Rock && type2 == CharacterType.Scissor)
+        {
+            winner = player1;
+            loser = player2;
+        }
+        else if (type1 == CharacterType.Paper && type2 == CharacterType.Rock)
+        {
+            winner = player1;
+            loser = player2;
+        }
+        else if (type1 == CharacterType.Paper && type2 == CharacterType.Scissor)
+        {
+            winner = player2;
+            loser = player1;
+        }
+        else if (type1 == CharacterType.Scissor && type2 == CharacterType.Rock)
+        {
+            winner = player2;
+            loser = player1;
+        }
+        else if (type1 == CharacterType.Scissor && type2 == CharacterType.Paper)
+        {
+            winner = player1;
+            loser = player2;
+        }
+        else
+        {
+            winner = null;
+            loser = null;
+
+        }
+    }
+
+    public void Replay()
+    {
+        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+    }
+    public void Quit()
+    {
+        SceneManager.LoadScene("Menu");
+    }
 }
